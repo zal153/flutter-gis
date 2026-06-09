@@ -4,8 +4,8 @@ import 'package:latlong2/latlong.dart';
 import '../models/posyandu_model.dart';
 
 class ApiService {
-  // static const String baseUrl = 'http://192.168.1.3:8000/api';
-  static const String baseUrl = 'http://10.0.2.2:8000/api';
+  static const String baseUrl = 'https://3203-140-213-118-225.ngrok-free.app/api';
+  // static const String baseUrl = 'http://10.0.2.2:8000/api';
 
   static Future<List<PosyanduModel>> fetchPosyandus({String search = ''}) async {
     try {
@@ -39,7 +39,7 @@ class ApiService {
           (body['routes'] as List).isNotEmpty) {
         final List<dynamic> routesJson = body['routes'];
         
-        return routesJson.map((routeJson) {
+        final List<RouteModel> allRoutes = routesJson.map((routeJson) {
           final List<dynamic> pathJson = routeJson['path'] ?? [];
           final double distance = double.tryParse(routeJson['distance'].toString()) ?? 0.0;
           
@@ -62,6 +62,51 @@ class ApiService {
             roadPath: coords,
           );
         }).toList();
+
+        // Filter out highly similar alternative routes (overlap >= 50%)
+        final List<RouteModel> filteredRoutes = [];
+        if (allRoutes.isNotEmpty) {
+          filteredRoutes.add(allRoutes[0]); // Always keep the main route
+
+          for (int k = 1; k < allRoutes.length; k++) {
+            final altRoute = allRoutes[k];
+            final altRoad = altRoute.roadPath;
+            if (altRoad == null || altRoad.isEmpty) {
+              filteredRoutes.add(altRoute);
+              continue;
+            }
+
+            final altKeys = altRoad.map((p) => '${p.latitude.toStringAsFixed(5)},${p.longitude.toStringAsFixed(5)}').toList();
+            bool isDuplicate = false;
+
+            for (final acceptedRoute in filteredRoutes) {
+              final acceptedRoad = acceptedRoute.roadPath;
+              if (acceptedRoad == null || acceptedRoad.isEmpty) {
+                continue;
+              }
+
+              final acceptedKeys = acceptedRoad.map((p) => '${p.latitude.toStringAsFixed(5)},${p.longitude.toStringAsFixed(5)}').toSet();
+              int sharedCount = 0;
+              for (final key in altKeys) {
+                if (acceptedKeys.contains(key)) {
+                  sharedCount++;
+                }
+              }
+
+              final double overlapRatio = sharedCount / altKeys.length;
+              if (overlapRatio >= 0.50) {
+                isDuplicate = true;
+                break;
+              }
+            }
+
+            if (!isDuplicate) {
+              filteredRoutes.add(altRoute);
+            }
+          }
+        }
+
+        return filteredRoutes;
       }
 
       return [];

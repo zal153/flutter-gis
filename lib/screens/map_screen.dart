@@ -11,7 +11,6 @@ import '../algorithms/haversine.dart';
 import '../models/posyandu_model.dart';
 import '../core/api_service.dart';
 import 'hasil_pencarian_screen.dart';
-import 'rute_screen.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -27,7 +26,6 @@ class _MapScreenState extends State<MapScreen> {
   bool _hasLocation = false;
   List<PosyanduModel> _posyanduList = [];
   bool _isSatellite = false;
-  bool _showPosyandu = true;
   bool _isMapReady = false;
   LatLng? _pendingMapMove;
 
@@ -74,10 +72,12 @@ class _MapScreenState extends State<MapScreen> {
         });
 
         if (_isMapReady) {
-          _mapController.move(
-            LatLng(position.latitude, position.longitude),
-            15.0,
-          );
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _mapController.move(
+              LatLng(position.latitude, position.longitude),
+              15.0,
+            );
+          });
         } else {
           _pendingMapMove = LatLng(position.latitude, position.longitude);
         }
@@ -122,10 +122,12 @@ class _MapScreenState extends State<MapScreen> {
       });
 
       if (_isMapReady) {
-        _mapController.move(
-          LatLng(position.latitude, position.longitude),
-          15.0,
-        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _mapController.move(
+            LatLng(position.latitude, position.longitude),
+            15.0,
+          );
+        });
       } else {
         _pendingMapMove = LatLng(position.latitude, position.longitude);
       }
@@ -285,7 +287,9 @@ class _MapScreenState extends State<MapScreen> {
             FlutterMap(
               mapController: _mapController,
               options: MapOptions(
-                initialCenter: _defaultCenter,
+                initialCenter: _currentPosition != null
+                    ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
+                    : _defaultCenter,
                 initialZoom: 13.0,
                 minZoom: 10,
                 maxZoom: 18,
@@ -294,8 +298,10 @@ class _MapScreenState extends State<MapScreen> {
                     _isMapReady = true;
                   });
                   if (_pendingMapMove != null) {
-                    _mapController.move(_pendingMapMove!, 15.0);
-                    _pendingMapMove = null;
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _mapController.move(_pendingMapMove!, 15.0);
+                      _pendingMapMove = null;
+                    });
                   }
                 },
               ),
@@ -310,95 +316,95 @@ class _MapScreenState extends State<MapScreen> {
                 ),
 
                 // Marker semua posyandu (titik kecil di peta dengan label nama jika diaktifkan)
-                if (_showPosyandu)
-                  MarkerLayer(
-                    markers: _posyanduList
-                        .map(
-                          (p) => Marker(
-                            point: LatLng(p.latitude, p.longitude),
-                            width: 120,
-                            height: 60,
-                            alignment: Alignment.center,
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () {
-                                if (!_hasLocation || _currentPosition == null) {
-                                  _showSnackBar('Menunggu lokasi Anda...');
-                                  _initLocation();
-                                  return;
-                                }
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => RuteScreen(
-                                      posyandu: p,
-                                      currentPosition: _currentPosition!,
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // Badge nama posyandu
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 6, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.95),
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(
-                                          color: AppTheme.primary, width: 1),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.12),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Text(
-                                      p.namaPosyandu,
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppTheme.textPrimary,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  // Pin Ikon Posyandu
-                                  Container(
-                                    width: 24,
-                                    height: 24,
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.primary,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                          color: Colors.white, width: 1.5),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color:
-                                              AppTheme.primary.withValues(alpha: 0.35),
-                                          blurRadius: 6,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.local_hospital_rounded,
-                                      color: Colors.white,
-                                      size: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  ),
+                // if (_showPosyandu)
+                //   MarkerLayer(
+                //     markers: _posyanduList
+                //         .map(
+                //           (p) => Marker(
+                //             point: LatLng(p.latitude, p.longitude),
+                //             width: 120,
+                //             height: 60,
+                //             alignment: Alignment.center,
+                //             child: GestureDetector(
+                //               behavior: HitTestBehavior.opaque,
+                //               onTap: () {
+                //                 if (!_hasLocation || _currentPosition == null) {
+                //                   _showSnackBar('Menunggu lokasi Anda...');
+                //                   _initLocation();
+                //                   return;
+                //                 }
+                //                 Navigator.push(
+                //                   context,
+                //                   MaterialPageRoute(
+                //                     builder: (_) => RuteScreen(
+                //                       posyandu: p,
+                //                       currentPosition: _currentPosition!,
+                //                     ),
+                //                   ),
+                //                 );
+                //               },
+                //               child: Column(
+                //                 mainAxisSize: MainAxisSize.min,
+                //                 children: [
+                //                   // Badge nama posyandu
+                //                   Container(
+                //                     padding: const EdgeInsets.symmetric(
+                //                         horizontal: 6, vertical: 3),
+                //                     decoration: BoxDecoration(
+                //                       color: Colors.white.withValues(alpha: 0.95),
+                //                       borderRadius: BorderRadius.circular(6),
+                //                       border: Border.all(
+                //                           color: AppTheme.primary, width: 1),
+                //                       boxShadow: [
+                //                         BoxShadow(
+                //                           color: Colors.black.withValues(alpha: 0.12),
+                //                           blurRadius: 4,
+                //                           offset: const Offset(0, 2),
+                //                         ),
+                //                       ],
+                //                     ),
+                //                     child: Text(
+                //                       p.namaPosyandu,
+                //                       style: GoogleFonts.plusJakartaSans(
+                //                         fontSize: 9,
+                //                         fontWeight: FontWeight.w700,
+                //                         color: AppTheme.textPrimary,
+                //                       ),
+                //                       overflow: TextOverflow.ellipsis,
+                //                     ),
+                //                   ),
+                //                   const SizedBox(height: 3),
+                //                   // Pin Ikon Posyandu
+                //                   Container(
+                //                     width: 24,
+                //                     height: 24,
+                //                     decoration: BoxDecoration(
+                //                       color: AppTheme.primary,
+                //                       shape: BoxShape.circle,
+                //                       border: Border.all(
+                //                           color: Colors.white, width: 1.5),
+                //                       boxShadow: [
+                //                         BoxShadow(
+                //                           color:
+                //                               AppTheme.primary.withValues(alpha: 0.35),
+                //                           blurRadius: 6,
+                //                           offset: const Offset(0, 2),
+                //                         ),
+                //                       ],
+                //                     ),
+                //                     child: const Icon(
+                //                       Icons.local_hospital_rounded,
+                //                       color: Colors.white,
+                //                       size: 12,
+                //                     ),
+                //                   ),
+                //                 ],
+                //               ),
+                //             ),
+                //           ),
+                //         )
+                //         .toList(),
+                //   ),
 
                 // Marker lokasi user — ikon orang sesuai mockup 3.12
                 if (_hasLocation && _currentPosition != null)

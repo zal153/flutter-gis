@@ -608,24 +608,9 @@ class _RuteScreenState extends State<RuteScreen> {
 
                   const SizedBox(width: 16),
 
-                  // Tombol MULAI — ikon segitiga/navigasi sesuai mockup 3.14
+                  // Tombol DETAIL/INFO — ikon info
                   GestureDetector(
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Navigasi dimulai!',
-                            style: GoogleFonts.plusJakartaSans(
-                                color: Colors.white),
-                          ),
-                          backgroundColor: AppTheme.primary,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          margin: const EdgeInsets.all(16),
-                        ),
-                      );
-                    },
+                    onTap: _showDetailPosyandu,
                     child: Container(
                       width: 56,
                       height: 56,
@@ -644,12 +629,12 @@ class _RuteScreenState extends State<RuteScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Icon(
-                            Icons.navigation_rounded,
+                            Icons.info_rounded,
                             color: Colors.white,
                             size: 24,
                           ),
                           Text(
-                            'Mulai',
+                            'Info',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 9,
                               color: Colors.white,
@@ -671,6 +656,207 @@ class _RuteScreenState extends State<RuteScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showDetailPosyandu() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        final posyandu = widget.posyandu;
+        final isAktif = (posyandu.status?.toLowerCase() ?? 'aktif') == 'aktif';
+
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          padding: EdgeInsets.only(
+            top: 12,
+            left: 20,
+            right: 20,
+            bottom: MediaQuery.of(context).padding.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          posyandu.namaPosyandu,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Desa ${posyandu.desa} • ${posyandu.alamat ?? "Tidak ada detail alamat"}',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            color: AppTheme.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: isAktif
+                          ? AppTheme.success.withValues(alpha: 0.15)
+                          : AppTheme.error.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      posyandu.status ?? 'Aktif',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: isAktif ? AppTheme.success : AppTheme.error,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              const Divider(color: AppTheme.divider),
+              const SizedBox(height: 12),
+              Text(
+                'Informasi Pelayanan',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                posyandu.keterangan ??
+                    'Menyediakan pelayanan imunisasi dasar balita, pemantauan status gizi (penimbangan berat badan dan pengukuran tinggi badan balita), pemberian makanan tambahan (PMT), KB, serta kesehatan ibu dan anak.',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  color: AppTheme.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.background,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.divider),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Jarak Tempuh',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11,
+                              color: AppTheme.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _jarakFormatted,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      height: 30,
+                      color: AppTheme.divider,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Estimasi Waktu',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11,
+                              color: AppTheme.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _estimasiWaktu,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    'Tutup',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
